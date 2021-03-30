@@ -13,8 +13,10 @@ module FIO
 using JSON, ZipFile
 using SparseArrays: SparseMatrixCSC
 
-export load_dict, save_dict, read_dict, write_dict,
-       zip_dict, unzip_dict
+export read_dict, write_dict,
+       zip_dict, unzip_dict,
+       load_json, save_json,
+       load_dict, save_dict 
 
 
 #######################################################################
@@ -75,19 +77,21 @@ read_dict(::Val{sym}, D::Dict) where {sym} =
 #                     JSON
 #######################################################################
 
-function load_dict(fname::AbstractString)
+
+function load_json(fname::AbstractString)
     return JSON.parsefile(fname)
 end
 
-function save_dict(fname::AbstractString, D::Dict; indent=0)
+function save_json(fname::AbstractString, D::Dict; indent=0)
     f = open(fname, "w")
     JSON.print(f, D, indent)
     close(f)
     return nothing
 end
 
-save_dict = save_dict
-load_dict = load_dict
+load_dict = load_json
+save_dict = save_json
+
 
 function zip_dict(fname::AbstractString, D::Dict; indent=0)
    zipdir = ZipFile.Writer(fname)
@@ -174,7 +178,6 @@ function read_dict(::Val{:SparseMatrixCSC}, D::Dict)
    return SparseMatrixCSC(Int(D["m"]), Int(D["n"]),
                            TI.(D["colptr"]), TI.(D["rowval"]), TF.(D["nzval"]))
 end
-
 
 
 

@@ -82,11 +82,26 @@ evaluate_d(basis::ScalarACEBasis, args...) =
 
 
 function alloc_B end
+
 function alloc_dB end
+
+
+
+"""
+a simple utility function to check whether two objects are equal
+"""
+_allfieldsequal(x1, x2) =
+      all( getfield(x1, sym) == getfield(x2, sym)
+           for sym in union(fieldnames(typeof(x1)), fieldnames(typeof(x2))) )
+
+
 
 
 include("fio.jl")
 @reexport using ACEbase.FIO
+
+include("testing.jl")
+
 
 
 end
