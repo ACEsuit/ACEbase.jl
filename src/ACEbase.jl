@@ -51,6 +51,7 @@ abstract type ACEBasis <: AbstractBasis end
 abstract type OneParticleBasis{T} <: ACEBasis end
 abstract type ScalarACEBasis <: ACEBasis end
 
+function combine end 
 
 function evaluate end
 function evaluate_d end
@@ -93,8 +94,6 @@ a simple utility function to check whether two objects are equal
 _allfieldsequal(x1, x2) =
       all( getfield(x1, sym) == getfield(x2, sym)
            for sym in union(fieldnames(typeof(x1)), fieldnames(typeof(x2))) )
-
-
 
 
 include("fio.jl")
