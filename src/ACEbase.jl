@@ -2,6 +2,7 @@ module ACEbase
 
 using Reexport
 
+include("def.jl")
 
 
 """
@@ -19,6 +20,8 @@ fltype_intersect(o1, o2) =
 
 fltype_intersect(T1::DataType, T2::DataType) =
    typeof(one(T1) * one(T2))
+
+function gradtype end
 
 """
 `function rfltype end`
@@ -45,13 +48,12 @@ alloc_temp_d(args...) = nothing
 alloc_temp_dd(args...) = nothing
 
 
-
 abstract type AbstractBasis end
 abstract type ACEBasis <: AbstractBasis end
 abstract type OneParticleBasis{T} <: ACEBasis end
 abstract type ScalarACEBasis <: ACEBasis end
 
-function combine end 
+function combine end
 
 function evaluate end
 function evaluate_d end
@@ -63,12 +65,21 @@ function evaluate_dd! end
 function evaluate_ed! end
 function precon! end
 
+alloc_temp_d(basis::AbstractBasis, X) = alloc_temp_d(basis, length(X))
 
 evaluate(basis::ACEBasis, args...) =
       evaluate!(alloc_B(basis), alloc_temp(basis), basis, args...)
 
 evaluate_d(basis::ACEBasis, args...) =
-      evaluate_d!(alloc_dB(basis), alloc_temp_d(basis), basis, args...)
+      evaluate_d!(alloc_dB(basis, length(args[1])),
+                  alloc_temp_d(basis, length(args[1])), basis, args...)
+
+function evaluate_ed(basis::ACEBasis, args...)
+   B = alloc_B(basis)
+   dB = alloc_dB(basis, length(args[1]))
+   evaluate_ed!(B, dB, alloc_temp_d(basis, args...), basis, args...)
+   return B, dB
+end
 
 
 # Some overloading to enable AD for some cases
