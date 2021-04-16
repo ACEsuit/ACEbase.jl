@@ -5,6 +5,24 @@ using Reexport
 include("def.jl")
 
 
+
+abstract type AbstractBasis end
+abstract type ACEBasis <: AbstractBasis end
+abstract type OneParticleBasis{T} <: ACEBasis end
+abstract type ScalarACEBasis <: ACEBasis end
+
+abstract type AbstractState end
+
+abstract type AbstractConfiguration end
+
+abstract type AbstractContinuousState <: AbstractState end
+
+abstract type AbstractDiscreteState <: AbstractState end
+
+isdiscrete(::AbstractContinuousState) = false
+isdiscrete(::AbstractDiscreteState) = true
+
+
 """
 `function fltype`
 
@@ -48,10 +66,21 @@ alloc_temp_d(args...) = nothing
 alloc_temp_dd(args...) = nothing
 
 
-abstract type AbstractBasis end
-abstract type ACEBasis <: AbstractBasis end
-abstract type OneParticleBasis{T} <: ACEBasis end
-abstract type ScalarACEBasis <: ACEBasis end
+alloc_temp_d(basis::ACEBasis, cfg::AbstractConfiguration) =
+            alloc_temp_d(basis, length(cfg))
+
+
+function alloc_B end
+
+alloc_B(basis::ACEBasis, args...) = zeros(fltype(basis), length(basis))
+
+function alloc_dB end
+
+alloc_dB(basis::ACEBasis, cfg::AbstractConfiguration) =
+      alloc_dB(basis, length(cfg))
+alloc_dB(basis::ACEBasis, N::Integer) =
+            zeros(gradtype(basis), (length(basis), N))
+
 
 function combine end
 
@@ -65,14 +94,13 @@ function evaluate_dd! end
 function evaluate_ed! end
 function precon! end
 
-alloc_temp_d(basis::AbstractBasis, X) = alloc_temp_d(basis, length(X))
 
 evaluate(basis::ACEBasis, args...) =
-      evaluate!(alloc_B(basis), alloc_temp(basis), basis, args...)
+      evaluate!(alloc_B(basis, args...), alloc_temp(basis, args...), basis, args...)
 
 evaluate_d(basis::ACEBasis, args...) =
-      evaluate_d!(alloc_dB(basis, length(args[1])),
-                  alloc_temp_d(basis, length(args[1])), basis, args...)
+      evaluate_d!(alloc_dB(basis, args...),
+                  alloc_temp_d(basis, args...), basis, args...)
 
 function evaluate_ed(basis::ACEBasis, args...)
    B = alloc_B(basis)
@@ -90,12 +118,6 @@ evaluate(basis::ScalarACEBasis, args...) =
 
 evaluate_d(basis::ScalarACEBasis, args...) =
       evaluate_d!(alloc_B(basis, args...), alloc_temp(basis), basis, args...)
-
-
-
-function alloc_B end
-
-function alloc_dB end
 
 
 
