@@ -5,6 +5,7 @@ using Test, Printf
 
 using ACEbase.FIO: read_dict, write_dict, save_dict, load_dict
 using LinearAlgebra: norm
+using StaticArrays
 
 export print_tf, test_fio, h0, h1, h2, h3
 
@@ -56,6 +57,18 @@ function test_fio(obj)
    test2 = (obj == read_dict(load_dict(tmpf)))
    return test1, test2
 end
+
+_Vec(X::AbstractVector{<: StaticVector{3}}) = 
+      collect(reinterpret(Float64, X))
+
+_svecs(x::AbstractVector{T}) where {T} = 
+      collect(reinterpret(SVector{3, T}, x))
+
+
+fdtest(F, dF, X::AbstractVector{<: StaticVector{3}}; kwargs...) = 
+      fdtest( x -> F(_svecs(x)), 
+              x -> _Vec(dF(_svecs(x))), 
+              _Vec(X); kwargs... )
 
 
 """
