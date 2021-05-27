@@ -70,6 +70,11 @@ fdtest(F, dF, X::AbstractVector{<: StaticVector{3}}; kwargs...) =
               x -> _Vec(dF(_svecs(x))), 
               _Vec(X); kwargs... )
 
+fdtest(F, dF, X::Number; kwargs...) = 
+      fdtest( x -> F(x[1]), 
+              x -> [dF(x[1])], 
+              [X]; kwargs... )
+
 
 """
 first-order finite-difference test for scalar F
@@ -77,7 +82,7 @@ first-order finite-difference test for scalar F
 fdtest(F, dF, x; h0 = 1.0, verbose=true)
 ```
 """
-function fdtest(F, dF, x; h0 = 1.0, verbose=true)
+function fdtest(F, dF, x::AbstractVector; h0 = 1.0, verbose=true)
    errors = Float64[]
    E = F(x)
    dE = dF(x)
