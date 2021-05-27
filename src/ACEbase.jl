@@ -1,6 +1,6 @@
 module ACEbase
 
-using Reexport
+using Reexport, StaticArrays
 
 include("def.jl")
 
@@ -9,6 +9,7 @@ include("def.jl")
 abstract type AbstractBasis end
 abstract type ACEBasis <: AbstractBasis end
 abstract type OneParticleBasis{T} <: ACEBasis end
+abstract type Discrete1pBasis{T} <: OneParticleBasis{T} end 
 abstract type ScalarACEBasis <: ACEBasis end
 
 abstract type AbstractState end
@@ -77,7 +78,7 @@ alloc_B(basis::ACEBasis, args...) = zeros(fltype(basis), length(basis))
 function alloc_dB end
 
 alloc_dB(basis::ACEBasis, cfg::AbstractConfiguration) =
-      alloc_dB(basis, length(cfg))
+            alloc_dB(basis, length(cfg))
 alloc_dB(basis::ACEBasis, N::Integer) =
             zeros(gradtype(basis), (length(basis), N))
 
@@ -133,6 +134,16 @@ include("fio.jl")
 @reexport using ACEbase.FIO
 
 include("testing.jl")
+
+
+# ---- some utility code for discrete basis sets to avoid any attempt to 
+#      differentiate it
+
+# TODO: blech - nasty hack...
+alloc_dB(basis::Discrete1pBasis{T}, N::Integer) where {T} = 
+            zeros(SVector{3, T}, length(basis), N)
+
+
 
 
 
