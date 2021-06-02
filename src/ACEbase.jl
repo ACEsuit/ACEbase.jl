@@ -105,7 +105,7 @@ evaluate_d(basis::ACEBasis, args...) =
 
 function evaluate_ed(basis::ACEBasis, args...)
    B = alloc_B(basis)
-   dB = alloc_dB(basis, length(args[1]))
+   dB = alloc_dB(basis, args...)
    evaluate_ed!(B, dB, alloc_temp_d(basis, args...), basis, args...)
    return B, dB
 end
