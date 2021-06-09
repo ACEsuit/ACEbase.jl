@@ -70,7 +70,7 @@ function read_dict(D::Dict)
 end
 
 read_dict(::Val{sym}, D::Dict) where {sym} =
-    error("JuLIP.FIO.read_dict no implemented for symbol $(sym)")
+    error("ACEbase.FIO.read_dict no implemented for symbol $(sym)")
 
 
 #######################################################################
@@ -126,7 +126,7 @@ read_dict(::Val{:Type}, D::Dict) = Meta.eval(Meta.parse(D["T"]))
 # Complex Vector
 
 function write_dict(A::Vector{T}) where {T <: Number}
-   D = Dict("__id__" => "JuLIP_VectorOfNumber",
+   D = Dict("__id__" => "ACE_VectorOfNumber",
                  "T" => write_dict(T),
               "real" => real.(A))
    if T <: Complex
@@ -135,7 +135,7 @@ function write_dict(A::Vector{T}) where {T <: Number}
    return D
 end
 
-function read_dict(::Val{:JuLIP_VectorOfNumber}, D::Dict)
+function read_dict(::Val{:ACE_VectorOfNumber}, D::Dict)
    T = read_dict(D["T"])
    A = T.(D["real"])
    if T <: Complex
@@ -143,6 +143,13 @@ function read_dict(::Val{:JuLIP_VectorOfNumber}, D::Dict)
    end
    return A
 end
+
+write_dict(A::Vector{T}) where {T} = 
+         Dict("__id__" => "ACE_Vector",
+                "vals" => write_dict.(A))
+
+read_dict(::Val{:ACE_Vector}, D::Dict) = 
+         read_dict.(D["vals"])
 
 
 # Matrix
@@ -164,19 +171,18 @@ end
 
 write_dict(A::SparseMatrixCSC{TF, TI}) where {TF, TI} =
    Dict("__id__" => "SparseMatrixCSC",
-        "TF" => write_dict(TF),
         "TI" => write_dict(TI),
         "colptr" => A.colptr,
         "rowval" => A.rowval,
-        "nzval" => A.nzval,
+        "nzval" => write_dict(A.nzval),
         "m" => A.m,
         "n" => A.n )
 
 function read_dict(::Val{:SparseMatrixCSC}, D::Dict)
-   TF = read_dict(D["TF"])
    TI = read_dict(D["TI"])
    return SparseMatrixCSC(Int(D["m"]), Int(D["n"]),
-                           TI.(D["colptr"]), TI.(D["rowval"]), TF.(D["nzval"]))
+                           TI.(D["colptr"]), TI.(D["rowval"]), 
+                           read_dict(D["nzval"]))
 end
 
 

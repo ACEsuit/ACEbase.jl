@@ -49,12 +49,20 @@ again equivalent to `obj`
 
 The two results are returned as Booleans.
 """
-function test_fio(obj)
+function test_fio(obj; warntype = true)
    D = write_dict(obj)
    test1 = (obj == read_dict(D))
    tmpf = tempname() * ".json"
    save_dict(tmpf, D)
-   test2 = (obj == read_dict(load_dict(tmpf)))
+   obj2 = read_dict(load_dict(tmpf))
+   if warntype && (typeof(obj) != typeof(obj2))
+      @warn(
+      """test_fio: the loaded object does not have the same type
+             original : $(typeof(obj))
+         deserialised : $(typeof(obj2))
+      """)
+   end
+   test2 = (obj == obj2)
    return test1, test2
 end
 
