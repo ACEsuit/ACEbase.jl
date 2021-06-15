@@ -29,6 +29,8 @@ isdiscrete(::AbstractDiscreteState) = true
 
 Return the output floating point type employed by some object, typically a
 calculator or basis.
+
+DEPRECATE THIS!!!
 """
 function fltype end
 
@@ -40,8 +42,6 @@ fltype_intersect(o1, o2) =
 fltype_intersect(T1::DataType, T2::DataType) =
    typeof(one(T1) * one(T2))
 
-function gradtype end
-
 """
 `function rfltype end`
 
@@ -50,6 +50,14 @@ typically a calculator or basis, this is normally the same as fltype, but
 it can be difference e.g. `rfltype = real ∘ flype
 """
 rfltype(args...) = real(fltype(args...))
+
+
+function gradtype end
+
+function valtype end 
+
+valtype(basis::ACEBasis, cfg::AbstractConfiguration) =
+      valtype(basis, zero(eltype(cfg)))
 
 
 """
@@ -73,14 +81,15 @@ alloc_temp_d(basis::ACEBasis, cfg::AbstractConfiguration) =
 
 function alloc_B end
 
-alloc_B(basis::ACEBasis, args...) = zeros(fltype(basis), length(basis))
+alloc_B(basis::ACEBasis, x) = zeros(valtype(basis, x), length(basis))
 
 function alloc_dB end
 
-alloc_dB(basis::ACEBasis, cfg::AbstractConfiguration) =
-            alloc_dB(basis, length(cfg))
-alloc_dB(basis::ACEBasis, N::Integer) =
-            zeros(gradtype(basis), (length(basis), N))
+alloc_dB(B::ACEBasis, args...) = zeros(gradtype(B, args...), length(B))
+
+alloc_dB(B::ACEBasis, cfg::AbstractConfiguration) = 
+            zeros( gradtype(B, zero(eltype(cfg))), 
+                   (length(B), length(cfg) ) )
 
 
 function combine end
@@ -104,7 +113,7 @@ evaluate_d(basis::ACEBasis, args...) =
                   alloc_temp_d(basis, args...), basis, args...)
 
 function evaluate_ed(basis::ACEBasis, args...)
-   B = alloc_B(basis)
+   B = alloc_B(basis, args...)
    dB = alloc_dB(basis, args...)
    evaluate_ed!(B, dB, alloc_temp_d(basis, args...), basis, args...)
    return B, dB
