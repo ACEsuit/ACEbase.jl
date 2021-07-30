@@ -60,36 +60,36 @@ valtype(basis::ACEBasis, cfg::AbstractConfiguration) =
       valtype(basis, zero(eltype(cfg)))
 
 
-"""
-`alloc_temp(args...)` : allocate temporary arrays for the evaluation of
-some calculator or potential; see developer docs for more information
-"""
-alloc_temp(args...) = nothing
+# """
+# `alloc_temp(args...)` : allocate temporary arrays for the evaluation of
+# some calculator or potential; see developer docs for more information
+# """
+# alloc_temp(args...) = nothing
 
-"""
-`alloc_temp_d(args...)` : allocate temporary arrays for the evaluation of
-some calculator or potential; see developer docs for more information
-"""
-alloc_temp_d(args...) = nothing
+# """
+# `alloc_temp_d(args...)` : allocate temporary arrays for the evaluation of
+# some calculator or potential; see developer docs for more information
+# """
+# alloc_temp_d(args...) = nothing
 
-alloc_temp_dd(args...) = nothing
-
-
-alloc_temp_d(basis::ACEBasis, cfg::AbstractConfiguration) =
-            alloc_temp_d(basis, length(cfg))
+# alloc_temp_dd(args...) = nothing
 
 
-function alloc_B end
+# alloc_temp_d(basis::ACEBasis, cfg::AbstractConfiguration) =
+#             alloc_temp_d(basis, length(cfg))
 
-alloc_B(basis::ACEBasis, x) = zeros(valtype(basis, x), length(basis))
 
-function alloc_dB end
+# function alloc_B end
 
-alloc_dB(B::ACEBasis, args...) = zeros(gradtype(B, args...), length(B))
+# alloc_B(basis::ACEBasis, x) = zeros(valtype(basis, x), length(basis))
 
-alloc_dB(B::ACEBasis, cfg::AbstractConfiguration) = 
-            zeros( gradtype(B, zero(eltype(cfg))), 
-                   (length(B), length(cfg) ) )
+# function alloc_dB end
+
+# alloc_dB(B::ACEBasis, args...) = zeros(gradtype(B, args...), length(B))
+
+# alloc_dB(B::ACEBasis, cfg::AbstractConfiguration) = 
+#             zeros( gradtype(B, zero(eltype(cfg))), 
+#                    (length(B), length(cfg) ) )
 
 
 function combine end
@@ -105,29 +105,29 @@ function evaluate_ed! end
 function precon! end
 
 
-evaluate(basis::ACEBasis, args...) =
-      evaluate!(alloc_B(basis, args...), alloc_temp(basis, args...), basis, args...)
+# evaluate(basis::ACEBasis, args...) =
+#       evaluate!(alloc_B(basis, args...), alloc_temp(basis, args...), basis, args...)
 
-evaluate_d(basis::ACEBasis, args...) =
-      evaluate_d!(alloc_dB(basis, args...),
-                  alloc_temp_d(basis, args...), basis, args...)
+# evaluate_d(basis::ACEBasis, args...) =
+#       evaluate_d!(alloc_dB(basis, args...),
+#                   alloc_temp_d(basis, args...), basis, args...)
 
-function evaluate_ed(basis::ACEBasis, args...)
-   B = alloc_B(basis, args...)
-   dB = alloc_dB(basis, args...)
-   evaluate_ed!(B, dB, alloc_temp_d(basis, args...), basis, args...)
-   return B, dB
-end
+# function evaluate_ed(basis::ACEBasis, args...)
+#    B = alloc_B(basis, args...)
+#    dB = alloc_dB(basis, args...)
+#    evaluate_ed!(B, dB, alloc_temp_d(basis, args...), basis, args...)
+#    return B, dB
+# end
 
 
 # Some overloading to enable AD for some cases
 #   TODO -> this needs to be extended..
 
-evaluate(basis::ScalarACEBasis, args...) =
-      evaluate!(alloc_B(basis, args...), alloc_temp(basis), basis, args...)
+# evaluate(basis::ScalarACEBasis, args...) =
+#       evaluate!(alloc_B(basis, args...), alloc_temp(basis), basis, args...)
 
-evaluate_d(basis::ScalarACEBasis, args...) =
-      evaluate_d!(alloc_B(basis, args...), alloc_temp(basis), basis, args...)
+# evaluate_d(basis::ScalarACEBasis, args...) =
+#       evaluate_d!(alloc_B(basis, args...), alloc_temp(basis), basis, args...)
 
 
 
