@@ -52,8 +52,15 @@ The two results are returned as Booleans.
 function test_fio(obj; warntype = true)
    D = write_dict(obj)
    test1 = (obj == read_dict(D))
+   if !test1 
+      @warn("test_fio (1) fails - read_dict(write_dict(obj)) != obj")
+   end
    tmpf = tempname() * ".json"
    save_dict(tmpf, D)
+   D2 = load_dict(tmpf)
+   if D != D2 
+      @warn("load_dict(save_dict(D)) != D")
+   end
    obj2 = read_dict(load_dict(tmpf))
    if warntype && (typeof(obj) != typeof(obj2))
       @warn(
@@ -63,6 +70,9 @@ function test_fio(obj; warntype = true)
       """)
    end
    test2 = (obj == obj2)
+   if !test2 
+      @warn("test_fio (2) fails - obj2 != obj")
+   end
    return test1, test2
 end
 
