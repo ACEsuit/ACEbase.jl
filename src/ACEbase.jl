@@ -4,7 +4,8 @@ using Reexport, StaticArrays
 
 include("def.jl")
 
-
+include("objectpools.jl")
+import ACEbase.ObjectPools: acquire!, release!
 
 abstract type AbstractBasis end
 abstract type ACEBasis <: AbstractBasis end
@@ -48,17 +49,13 @@ fltype_intersect(T1::DataType, T2::DataType) =
 Return the real floating point type employed by some object,
 typically a calculator or basis, this is normally the same as fltype, but
 it can be difference e.g. `rfltype = real ∘ flype
+
+DEPRECATE THIS!! 
 """
 rfltype(args...) = real(fltype(args...))
 
 
-function gradtype end
-
-function valtype end 
-
-valtype(basis::ACEBasis, cfg::AbstractConfiguration) =
-      valtype(basis, zero(eltype(cfg)))
-
+# TODO: deprecate all of the following: 
 
 # """
 # `alloc_temp(args...)` : allocate temporary arrays for the evaluation of
@@ -91,6 +88,21 @@ valtype(basis::ACEBasis, cfg::AbstractConfiguration) =
 #             zeros( gradtype(B, zero(eltype(cfg))), 
 #                    (length(B), length(cfg) ) )
 
+# -----------
+
+
+
+
+function valtype end 
+
+valtype(basis::ACEBasis, cfg::AbstractConfiguration) =
+      valtype(basis, zero(eltype(cfg)))
+
+
+function gradtype end
+
+
+
 
 function combine end
 
@@ -105,32 +117,66 @@ function evaluate_ed! end
 function precon! end
 
 
-# evaluate(basis::ACEBasis, args...) =
-#       evaluate!(alloc_B(basis, args...), alloc_temp(basis, args...), basis, args...)
+evaluate(basis::ACEBasis, args...) =  
+      evaluate!( acquire_B!(basis, args...), basis, args... )
 
-# evaluate_d(basis::ACEBasis, args...) =
-#       evaluate_d!(alloc_dB(basis, args...),
-#                   alloc_temp_d(basis, args...), basis, args...)
+evaluate_d(basis::ACEBasis, args...) =  
+      evaluate_d!( acquire_dB!(basis, args...), basis, args... )
 
-# function evaluate_ed(basis::ACEBasis, args...)
-#    B = alloc_B(basis, args...)
-#    dB = alloc_dB(basis, args...)
-#    evaluate_ed!(B, dB, alloc_temp_d(basis, args...), basis, args...)
-#    return B, dB
-# end
-
-
-# Some overloading to enable AD for some cases
-#   TODO -> this needs to be extended..
-
-# evaluate(basis::ScalarACEBasis, args...) =
-#       evaluate!(alloc_B(basis, args...), alloc_temp(basis), basis, args...)
-
-# evaluate_d(basis::ScalarACEBasis, args...) =
-#       evaluate_d!(alloc_B(basis, args...), alloc_temp(basis), basis, args...)
+evaluate_ed(basis::ACEBasis, args...) =  
+      evaluate_ed!( acquire_B!(basis, args...), acquire_dB!(basis, args...), 
+                    basis, args... )
 
 
 
+# TODO - documentation 
+function acquire_B! end 
+function release_B! end 
+function acquire_dB! end 
+function release_dB! end 
+
+# a few nice fallbacks / defaults 
+
+function acquire_B!(basis::ACEBasis, args...) 
+   VT = valtype(basis, args...)
+   if hasproperty(basis, :B_pool)
+      return acquire!(basis.B_pool, length(basis), VT)
+   end 
+   return Vector{VT}(undef, length(basis))
+end
+
+function release_B!(basis::ACEBasis, B) 
+   if hasproperty(basis, :B_pool)
+      release!(basis.B_pool, B)
+   end
+end 
+
+function acquire_dB!(basis::ACEBasis, args...) 
+   GT = gradtype(basis, args...)
+   if hasproperty(basis, :dB_pool)
+      return acquire!(basis.dB_pool, length(basis), GT)
+   end
+   return Vector{GT}(undef, length(basis))
+end
+
+function acquire_dB!(basis::ACEBasis, cfg::AbstractConfiguration) 
+   GT = gradtype(basis, cfg)
+   sz = (length(basis), length(cfg))
+   if hasproperty(basis, :dB_pool)
+      return acquire!(basis.dB_pool, sz, GT)
+   end
+   return Matrix{GT}(undef, sz)
+end
+
+function release_dB!(basis::ACEBasis, dB) 
+   if hasproperty(basis, :dB_pool)
+      release!(basis.dB_pool, dB)
+   end
+end 
+
+
+
+# TODO: create a version where we can list which fields should be equal
 """
 a simple utility function to check whether two objects are equal
 """
