@@ -33,7 +33,7 @@ acquire!(pool::VectorPool{T}, len::Integer, ::Type{T}) where {T} =
 function acquire!(pool::VectorPool{T}, len::Integer) where {T}
     if length(pool.arrays) > 0     
         x = pop!(pool.arrays)
-        if len > length(x) 
+        if len != length(x) 
             resize!(x, len)
         end 
         return x 

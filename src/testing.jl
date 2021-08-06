@@ -58,9 +58,9 @@ function test_fio(obj; warntype = true)
    tmpf = tempname() * ".json"
    save_dict(tmpf, D)
    D2 = load_dict(tmpf)
-   if D != D2 
-      @warn("load_dict(save_dict(D)) != D")
-   end
+   # if D != D2 
+   #    @warn("load_dict(save_dict(D)) != D")
+   # end
    obj2 = read_dict(load_dict(tmpf))
    if warntype && (typeof(obj) != typeof(obj2))
       @warn(
