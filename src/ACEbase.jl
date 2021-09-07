@@ -57,24 +57,6 @@ rfltype(args...) = real(fltype(args...))
 
 # TODO: deprecate all of the following: 
 
-# """
-# `alloc_temp(args...)` : allocate temporary arrays for the evaluation of
-# some calculator or potential; see developer docs for more information
-# """
-# alloc_temp(args...) = nothing
-
-# """
-# `alloc_temp_d(args...)` : allocate temporary arrays for the evaluation of
-# some calculator or potential; see developer docs for more information
-# """
-# alloc_temp_d(args...) = nothing
-
-# alloc_temp_dd(args...) = nothing
-
-
-# alloc_temp_d(basis::ACEBasis, cfg::AbstractConfiguration) =
-#             alloc_temp_d(basis, length(cfg))
-
 
 # function alloc_B end
 

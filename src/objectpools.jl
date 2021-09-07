@@ -8,6 +8,7 @@ module ObjectPools
 
 export acquire!, release!
 export VectorPool, MatrixPool, ArrayPool
+using Base.Threads: nthreads, threadid
 
 
 # TODO: 
@@ -17,9 +18,9 @@ export VectorPool, MatrixPool, ArrayPool
 #   those via dispatch; e.g. Duals? Complex? All possible Floats? ....
 
 struct VectorPool{T}
-    arrays::Vector{Vector{T}}
-
-    VectorPool{T}() where {T} = new( Vector{T}[ ] )
+    #        tid    stack    object 
+    arrays::Vector{Vector{Vector{T}}}
+    VectorPool{T}() where {T} = new( [ Vector{T}[ ] for _=1:nthreads() ] )
 end
 
 
@@ -31,9 +32,10 @@ acquire!(pool::VectorPool{T}, len::Integer, ::Type{T}) where {T} =
 
 
 function acquire!(pool::VectorPool{T}, len::Integer) where {T}
-    if length(pool.arrays) > 0     
-        x = pop!(pool.arrays)
-        if len != length(x) 
+    tid = threadid()
+    if length(pool.arrays[tid]) > 0     
+        x = pop!(pool.arrays[tid])
+        if len != length(x)
             resize!(x, len)
         end 
         return x 
@@ -43,16 +45,18 @@ function acquire!(pool::VectorPool{T}, len::Integer) where {T}
 end
 
 function release!(pool::VectorPool{T}, x::Vector{T}) where {T}
-    push!(pool.arrays, x)
+    tid = threadid() 
+    push!(pool.arrays[tid], x)
     return nothing 
 end
 
 # Vector -> Array  -> Vector 
 
 function acquire!(pool::VectorPool{T}, sz::NTuple{N}) where {T, N}
+    tid = threadid()
     len = prod(sz)::Integer
-    if length(pool.arrays) > 0     
-        x = pop!(pool.arrays)
+    if length(pool.arrays[tid]) > 0     
+        x = pop!(pool.arrays[tid])
         if len != length(x)
             resize!(x, len)
         end 
@@ -65,7 +69,7 @@ end
 release!(pool::VectorPool{T}, x::Array{T}) where {T} = 
         release!(pool, reshape(x, :))
 
-# fallbacks 
+# fallbacks that allocate and relase to the main GC
 
 acquire!(pool::VectorPool{T}, len::Integer, S::Type{T1}) where {T, T1} = 
         Vector{S}(undef, len)
