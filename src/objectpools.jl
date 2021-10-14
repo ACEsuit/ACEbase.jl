@@ -19,8 +19,8 @@ using Base.Threads: nthreads, threadid
 
 struct VectorPool{T}
     #        tid    stack    object 
-    arrays::Vector{Vector{Vector{T}}}
-    VectorPool{T}() where {T} = new( [ Vector{T}[ ] for _=1:nthreads() ] )
+    arrays::Vector{Set{Vector{T}}}
+    VectorPool{T}() where {T} = new( [ Set{Vector{T}}() for _=1:nthreads() ] )
 end
 
 
@@ -33,7 +33,7 @@ acquire!(pool::VectorPool{T}, len::Integer, ::Type{T}) where {T} =
 
 function acquire!(pool::VectorPool{T}, len::Integer) where {T}
     tid = threadid()
-    if length(pool.arrays[tid]) > 0     
+    if !isempty(pool.arrays[tid]) > 0     
         x = pop!(pool.arrays[tid])
         if len != length(x)
             resize!(x, len)
@@ -55,7 +55,7 @@ end
 function acquire!(pool::VectorPool{T}, sz::NTuple{N}) where {T, N}
     tid = threadid()
     len = prod(sz)::Integer
-    if length(pool.arrays[tid]) > 0     
+    if !isempty(pool.arrays[tid])
         x = pop!(pool.arrays[tid])
         if len != length(x)
             resize!(x, len)
