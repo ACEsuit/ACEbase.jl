@@ -6,6 +6,8 @@ module ObjectPools
 #      https://github.com/tpapp/ObjectPools.jl
 # but simplified and now evolved 
 
+using DataStructures: Stack 
+
 export acquire!, release!
 export VectorPool, MatrixPool, ArrayPool
 using Base.Threads: nthreads, threadid
@@ -19,8 +21,8 @@ using Base.Threads: nthreads, threadid
 
 struct VectorPool{T}
     #        tid    stack    object 
-    arrays::Vector{Set{Vector{T}}}
-    VectorPool{T}() where {T} = new( [ Set{Vector{T}}() for _=1:nthreads() ] )
+    arrays::Vector{Stack{Vector{T}}}
+    VectorPool{T}() where {T} = new( [ Stack{Vector{T}}() for _=1:nthreads() ] )
 end
 
 
@@ -37,7 +39,7 @@ function acquire!(pool::VectorPool{T}, len::Integer) where {T}
         x = pop!(pool.arrays[tid])
         if len != length(x)
             resize!(x, len)
-        end 
+        end
         return x 
     else
         return Vector{T}(undef, len)
