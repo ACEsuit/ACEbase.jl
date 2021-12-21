@@ -119,42 +119,105 @@ function release_dB! end
 
 # a few nice fallbacks / defaults 
 
-function acquire_B!(basis::ACEBasis, args...) 
-   VT = valtype(basis, args...)
-   if hasproperty(basis, :B_pool)
-      return acquire!(basis.B_pool, length(basis), VT)
+# function acquire_B!(basis::ACEBasis, args...) 
+#    VT = valtype(basis, args...)
+#    if hasproperty(basis, :B_pool)
+#       return acquire!(basis.B_pool, length(basis), VT)
+#    end
+#    return Vector{VT}(undef, length(basis))
+# end
+
+# function release_B!(basis::ACEBasis, B) 
+#    if hasproperty(basis, :B_pool)
+#       release!(basis.B_pool, B)
+#    end
+# end 
+
+@generated function acquire_B!(basis::TB, args...)  where {TB <: ACEBasis}
+   if :B_pool in fieldnames(TB)
+      return quote 
+         VT = valtype(basis, args...)
+         return acquire!(basis.B_pool, length(basis), VT)
+      end
+   else
+      return quote 
+         VT = valtype(basis, args...)
+         Vector{VT}(undef, length(basis))::Vector{VT}
+      end
+   end
+end
+
+@generated function release_B!(basis::TB, B)  where {TB <: ACEBasis}
+   if :B_pool in fieldnames(basis) 
+      return quote 
+         release!(basis.B_pool, B)
+      end
+   else
+      return quote nothing; end 
+   end
+end 
+
+
+# function acquire_dB!(basis::ACEBasis, args...) 
+#    GT = gradtype(basis, args...)
+#    if hasproperty(basis, :dB_pool)
+#       return acquire!(basis.dB_pool, length(basis), GT)
+#    end
+#    return Vector{GT}(undef, length(basis))
+# end
+
+# function acquire_dB!(basis::ACEBasis, cfg::AbstractConfiguration) 
+#    GT = gradtype(basis, cfg)
+#    sz = (length(basis), length(cfg))
+#    if hasproperty(basis, :dB_pool)
+#       return acquire!(basis.dB_pool, sz, GT)
+#    end
+#    return Matrix{GT}(undef, sz)
+# end
+
+# function release_dB!(basis::ACEBasis, dB) 
+#    if hasproperty(basis, :dB_pool)
+#       release!(basis.dB_pool, dB)
+#    end
+# end 
+
+@generated function acquire_dB!(basis::TB, args...)  where {TB <: ACEBasis}
+   if :dB_pool in fieldnames(TB)
+      return quote 
+         GT = gradtype(basis, args...)
+         acquire!(basis.dB_pool, length(basis), GT)
+      end
+   end
+   return quote 
+      GT = gradtype(basis, args...)
+      return Vector{GT}(undef, length(basis))   
    end 
-   return Vector{VT}(undef, length(basis))
 end
 
-function release_B!(basis::ACEBasis, B) 
-   if hasproperty(basis, :B_pool)
-      release!(basis.B_pool, B)
+@generated function acquire_dB!(basis::TB, cfg::AbstractConfiguration)  where {TB <: ACEBasis}
+   if :dB_pool in fieldnames(TB)
+      return quote 
+         GT = gradtype(basis, cfg)
+         sz = (length(basis), length(cfg))
+         return acquire!(basis.dB_pool, sz, GT)
+      end
    end
-end 
-
-function acquire_dB!(basis::ACEBasis, args...) 
-   GT = gradtype(basis, args...)
-   if hasproperty(basis, :dB_pool)
-      return acquire!(basis.dB_pool, length(basis), GT)
-   end
-   return Vector{GT}(undef, length(basis))
+   return quote 
+      GT = gradtype(basis, cfg)
+      sz = (length(basis), length(cfg))
+      return Matrix{GT}(undef, sz)
+   end 
 end
 
-function acquire_dB!(basis::ACEBasis, cfg::AbstractConfiguration) 
-   GT = gradtype(basis, cfg)
-   sz = (length(basis), length(cfg))
-   if hasproperty(basis, :dB_pool)
-      return acquire!(basis.dB_pool, sz, GT)
+@generated function release_dB!(basis::TB, B)  where {TB <: ACEBasis}
+   if :dB_pool in fieldnames(basis)
+      return quote 
+         release!(basis.dB_pool, B)
+      end
+   else
+      return quote nothing; end 
    end
-   return Matrix{GT}(undef, sz)
 end
-
-function release_dB!(basis::ACEBasis, dB) 
-   if hasproperty(basis, :dB_pool)
-      release!(basis.dB_pool, dB)
-   end
-end 
 
 
 
