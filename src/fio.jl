@@ -10,13 +10,14 @@ can be changed later. This submodule provides
 """
 module FIO
 
-using JSON, ZipFile
+using JSON, YAML, ZipFile
 using SparseArrays: SparseMatrixCSC
 
 export read_dict, write_dict,
        zip_dict, unzip_dict,
        load_json, save_json,
-       load_dict, save_dict 
+       load_dict, save_dict,
+       load_yaml, save_yaml
 
 
 #######################################################################
@@ -89,8 +90,34 @@ function save_json(fname::AbstractString, D::Dict; indent=0)
     return nothing
 end
 
-load_dict = load_json
-save_dict = save_json
+function load_yaml(fname::AbstractString)
+   return YAML.load_file(fname)
+end
+
+function save_yaml(fname::AbstractString, D::Dict)
+   YAML.write_file(fname, D) 
+   return nothing
+end
+
+function load_dict(fname::AbstractString)
+   if endswith(fname, ".json")
+      return load_json(fname)
+   elseif endswith(fname, ".yaml") || enswith(fname, ".yml")
+      return load_yaml(fname)
+   else
+      throw(error("Unrecognised file format. Expected: \"*.json\" or \"*.yaml\", got filename: $(fname)"))
+   end
+end
+
+function save_dict(fname::AbstractString, D::Dict; indent=0)
+   if endswith(fname, ".json")
+      return save_json(fname, D; indent=indent)
+   elseif endswith(fname, ".yaml") || enswith(fname, ".yml")
+      return save_yaml(fname, D)
+   else
+      throw(error("Unrecognised file format. Expected: \"*.json\" or \"*.yaml\", got filename: $(fname)"))
+   end
+end
 
 
 function zip_dict(fname::AbstractString, D::Dict; indent=0)
