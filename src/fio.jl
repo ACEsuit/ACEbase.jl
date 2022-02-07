@@ -10,13 +10,14 @@ can be changed later. This submodule provides
 """
 module FIO
 
-using JSON, ZipFile
+using JSON, YAML, ZipFile
 using SparseArrays: SparseMatrixCSC
 
 export read_dict, write_dict,
        zip_dict, unzip_dict,
        load_json, save_json,
-       load_dict, save_dict 
+       load_dict, save_dict,
+       load_yaml, save_yaml
 
 
 #######################################################################
