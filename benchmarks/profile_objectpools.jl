@@ -19,21 +19,19 @@ function runn(pool, N, len, T)
    return nothing 
 end
 
+@info("Flex-Pool")
 @btime runn($pool, 1_000, 1_000, Float64)
 
+@info("Static-Pool")
 @btime runn(spool, 1_000, 1_000, Float64)
 
 
-@code_warntype acquire!(pool, 1000, Float64)
 
-@code_warntype release!(pool, x)
 
-@code_warntype runn(pool, 1_000, 1_000, Float64) 
-
-using Profile
-
-Profile.clear()
-
-@profile runn(pool, 1_000_000, 1_000, Float64)
-
-Profile.print()
+# @code_warntype acquire!(pool, 1000, Float64)
+# @code_warntype release!(pool, x)
+# @code_warntype runn(pool, 1_000, 1_000, Float64) 
+# using Profile
+# Profile.clear()
+# @profile runn(pool, 1_000_000, 1_000, Float64)
+# Profile.print()
