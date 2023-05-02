@@ -1,10 +1,9 @@
 name = "ACEbase"
 uuid = "14bae519-eb20-449c-a949-9c58ed33163e"
 authors = ["Christoph Ortner <christophortner0@gmail.com> and contributors"]
-version = "0.2.4"
+version = "0.4.0-dev"
 
 [deps]
-DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
@@ -16,7 +15,12 @@ YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
-julia = "1.5, 1.6"
+julia = "1.6"
+JSON = "0.21"
+Reexport = "1"
+StaticArrays = "1"
+YAML = "0.4"
+ZipFile = "0.9, 0.10"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
