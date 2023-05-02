@@ -1,13 +1,8 @@
 
 """
-`JuLIP.FIO` : provides some basis file IO. All sub-modules and derived
+`JuLIP.FIO` : provides some basis file IO. All ACEsuit 
 packages should use these interface functions so that the file formats
-can be changed later. This submodule provides
-
-- load_dict
-- save_dict
-- read_dict
-"""
+can be changed later. """
 module FIO
 
 using JSON, YAML, ZipFile
@@ -75,7 +70,7 @@ read_dict(::Val{sym}, D::Dict) where {sym} =
 
 
 #######################################################################
-#                     JSON
+#                     JSON & YAML 
 #######################################################################
 
 
@@ -142,9 +137,9 @@ function unzip_dict(fname::AbstractString; verbose=false)
    close(_zipdir)
 end
 
-
-
-## Some useful utility functions
+#######################################################################
+#                     FIO for several standard objects  
+#######################################################################
 
 # Datatype
 write_dict(T::Type) = Dict("__id__" => "Type", "T" => string(T))
@@ -213,6 +208,4 @@ function read_dict(::Val{:SparseMatrixCSC}, D::Dict)
 end
 
 
-
-##
 end

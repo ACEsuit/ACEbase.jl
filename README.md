@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/cortner/ACEbase.jl/workflows/CI/badge.svg)](https://github.com/cortner/ACEbase.jl/actions)
 
-Base definitions and universal methods primarily intended for `ACEsuit` and `JuLIP`, but may be more generally useful.
+Base definitions and methods shared across `ACEsuit`, but may be more generally useful. Please read the inline comments and documentation. 
 
 ## License
 

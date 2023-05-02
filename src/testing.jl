@@ -1,11 +1,9 @@
 
 module Testing
 
-using Test, Printf
-
+using Test, Printf, StaticArrays
 using ACEbase.FIO: read_dict, write_dict, save_dict, load_dict
 using LinearAlgebra: norm
-using StaticArrays
 
 export print_tf, test_fio, h0, h1, h2, h3, println_slim 
 
