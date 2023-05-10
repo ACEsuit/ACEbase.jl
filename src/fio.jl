@@ -1,12 +1,14 @@
 
 """
-`JuLIP.FIO` : provides some basis file IO. All ACEsuit 
+`ACEbase.FIO` : provides some basis file IO. All ACEsuit 
 packages should use these interface functions so that the file formats
 can be changed later. """
 module FIO
 
 using JSON, YAML, ZipFile
 using SparseArrays: SparseMatrixCSC
+using StaticArrays
+
 
 export read_dict, write_dict,
        zip_dict, unzip_dict,
@@ -19,7 +21,7 @@ export read_dict, write_dict,
 #                     Conversions to and from Dict
 #######################################################################
 
-# eventually we want to be able to serialise all JuLIP types to Dict
+# eventually we want to be able to serialise all ACE types to Dict
 # and back and those Dicts may only contain elementary data types
 # this will then allow us to load them back via read_dict without
 # having to know the type in the code
@@ -55,7 +57,7 @@ and being able to read old version in the future.
 """
 function read_dict(D::Dict)
     if !haskey(D, "__id__")
-        error("JuLIP.FIO.read_dict: `D` has no key `__id__`")
+        error("ACEbase.FIO.read_dict: `D` has no key `__id__`")
     end
     if haskey(D, "__v__")
       return read_dict(Val(Symbol(D["__id__"])),
@@ -143,50 +145,40 @@ end
 
 # Datatype
 write_dict(T::Type) = Dict("__id__" => "Type", "T" => string(T))
-read_dict(::Val{:Type}, D::Dict) = Meta.eval(Meta.parse(D["T"]))
+read_dict(::Val{:Type}, D::Dict) = Main.eval(Meta.parse(D["T"]))
 
 # Complex Vector
 
-function write_dict(A::Vector{T}) where {T <: Number}
-   D = Dict("__id__" => "ACE_VectorOfNumber",
+function write_dict(A::AbstractArray{T}) where {T <: Number}
+   D = Dict("__id__" => "ACE_ArrayOfNumber",
                  "T" => write_dict(T),
-              "real" => real.(A))
+              "size" => size(A), 
+              "real" => real.(A[:]))
    if T <: Complex
-      D["imag"] = imag.(A)
+      D["imag"] = imag.(A[:])
    end
    return D
 end
 
-function read_dict(::Val{:ACE_VectorOfNumber}, D::Dict)
+function read_dict(::Val{:ACE_ArrayOfNumber}, D::Dict)
    T = read_dict(D["T"])
-   A = T.(D["real"])
+   sz = tuple(D["size"]...)
+   data = T.(D["real"])
    if T <: Complex
-      A[:] .+= im .* D["imag"]
+      data[:] .+= im .* D["imag"]
    end
-   return A
+   return collect(reshape(data, sz))
 end
 
-write_dict(A::Vector{T}) where {T} = 
-         Dict("__id__" => "ACE_Vector",
-                "vals" => write_dict.(A))
+# General Array 
 
-read_dict(::Val{:ACE_Vector}, D::Dict) = 
-         read_dict.(D["vals"])
+write_dict(A::AbstractArray{T}) where {T} = 
+         Dict("__id__" => "ACE_Array",
+                "size" => size(A),
+                "vals" => write_dict.(A[:]) )
 
-
-# Matrix
-
-write_dict(A::Matrix{T}) where {T <: Number} =
-    Dict("__id__" => "JuLIP_Matrix",
-         "T"      => write_dict(T),
-         "nrows"  => size(A, 1),
-         "ncols"  => size(A, 2),
-         "data"   => A[:])
-
-function read_dict(::Val{:JuLIP_Matrix}, D::Dict)
-   T = read_dict(Val(:Type), D["T"])
-   return reshape(T.(D["data"]), D["nrows"], D["ncols"])
-end
+read_dict(::Val{:ACE_Array}, D::Dict) = 
+         collect(reshape(read_dict.(D["vals"]), tuple(D["size"]...)))
 
 
 # SparseMatrixCSC
@@ -207,5 +199,22 @@ function read_dict(::Val{:SparseMatrixCSC}, D::Dict)
                            read_dict(D["nzval"]))
 end
 
+
+# ------------ Static Arrays 
+# start with the standard simples ones and think later about how to generalize 
+# this sensibly ... 
+
+function write_dict(A::StaticArray{S, T, N}) where {S, T <: Real, N}
+   D = Dict("__id__" => "ACE_StaticArray",
+                 "T" => write_dict(typeof(A)),
+              "data" => A.data, )
+   D["T"]["T"] = "StaticArrays." * D["T"]["T"]
+   return D
+end
+
+function read_dict(::Val{:ACE_StaticArray}, D::Dict)
+   T = read_dict(D["T"])
+   return T(tuple(D["data"]...))
+end
 
 end
