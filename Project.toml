@@ -15,7 +15,7 @@ YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
-julia = "1.6"
+julia = "1.8"
 JSON = "0.21"
 Reexport = "1"
 StaticArrays = "1"
