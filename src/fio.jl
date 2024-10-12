@@ -5,7 +5,8 @@ packages should use these interface functions so that the file formats
 can be changed later. """
 module FIO
 
-using JSON, YAML, ZipFile
+using JSON, YAML
+using ZipArchives: ZipReader, ZipWriter, zip_newfile, zip_nentries, zip_name, zip_readentry
 using SparseArrays: SparseMatrixCSC
 using StaticArrays
 
@@ -122,25 +123,20 @@ end
 
 
 function zip_dict(fname::AbstractString, D::Dict; indent=0)
-   zipdir = ZipFile.Writer(fname)
-   fptr = ZipFile.addfile(zipdir, "dict.json"; method=ZipFile.Deflate)
-   write(fptr, JSON.json(D, indent))
-   close(fptr)
-   close(zipdir)
+   ZipWriter(fname) do zipdir
+      zip_newfile(zipdir, "dict.json"; compress=true)
+      write(zipdir, JSON.json(D, indent))
+   end
+   return nothing
 end
 
 function unzip_dict(fname::AbstractString; verbose=false)
-   # using global here is a weird workaround for a bug as suggest in
-   # https://github.com/fhs/ZipFile.jl/issues/14
-   global _zipdir = ZipFile.Reader(fname)
-   if length(_zipdir.files) != 1
+   zipdir = ZipReader(read(fname))
+   if zip_nentries(zipdir) != 1
       error("Expected exactly one file in `$(fname)`")
    end
-   fptr = _zipdir.files[1]
-   verbose && @show fptr.name
-   return JSON.parse(fptr)
-   close(fptr)
-   close(_zipdir)
+   verbose && @show zip_name(zipdir, 1)
+   return JSON.parse(zip_readentry(zipdir, 1, String))
 end
 
 #######################################################################

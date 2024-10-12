@@ -25,4 +25,14 @@ for O in objects
    println_slim(@test all(test_fio(O)))
 end
 
+# Test zip_dict and unzip_dict work
+for O in objects
+   tmpf = tempname()
+   D = write_dict(O)
+   save_json(tmpf * ".json", D)
+   Djson = load_json(tmpf * ".json")
+   zip_dict(tmpf * ".zip", D)
+   Dzip = unzip_dict(tmpf * ".zip")
+   println_slim(@test Dzip == Djson)
+end
 
