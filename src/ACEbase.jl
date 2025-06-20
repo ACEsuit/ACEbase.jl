@@ -19,6 +19,11 @@ function evaluate_dd! end
 function evaluate_ed! end
 function evaluate_ed2! end
 
+function pullback end 
+function pullback! end 
+function pushforward! end 
+function pushforward end 
+
 # these could be useful functions to share across ACEsuit packages as well since 
 # there are many different ways how one can allocate and release memory. 
 # For now, we will make them owned by ObjectPools.jl so that that package 
