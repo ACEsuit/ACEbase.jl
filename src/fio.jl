@@ -28,14 +28,14 @@ export read_dict, write_dict,
 # having to know the type in the code
 
 """
-`read_dict(D::Dict) -> ?`
+`read_dict(D::AbstractDict) -> ?`
 
 Looks for a key `__id__` in `D` whose value is used to dynamically dispatch
 the decoding to
 ```julia
 read_dict(Val(Symbol(D["__id__"])), D)
 ```
-That is, a user defined type must implement this `convert(::Val, ::Dict)`
+That is, a user defined type must implement this `convert(::Val, ::AbstractDict)`
 utility function. The typical code would be
 ```julia
 module MyModule
@@ -44,7 +44,7 @@ module MyModule
     end
     Dict(A::MyStructA) = Dict( "__id__" -> "MyModule_MyStructA",
                                "a" -> a )
-    MyStructA(D::Dict) = A(D["a"])
+    MyStructA(D::AbstractDict) = A(D["a"])
     Base.convert(::Val{:MyModule_MyStructA})
 end
 ```
@@ -56,7 +56,7 @@ types. It is intentional that a significant burden is put on the user code
 here. This will maximise flexibiliy, e.g., by introducing version numbers,
 and being able to read old version in the future.
 """
-function read_dict(D::Dict)
+function read_dict(D::AbstractDict)
     if !haskey(D, "__id__")
         error("ACEbase.FIO.read_dict: `D` has no key `__id__`")
     end
@@ -68,7 +68,7 @@ function read_dict(D::Dict)
     return read_dict(Val(Symbol(D["__id__"])), D)
 end
 
-read_dict(::Val{sym}, D::Dict) where {sym} =
+read_dict(::Val{sym}, D::AbstractDict) where {sym} =
     error("ACEbase.FIO.read_dict no implemented for symbol $(sym)")
 
 
@@ -81,7 +81,7 @@ function load_json(fname::AbstractString)
     return JSON.parsefile(fname)
 end
 
-function save_json(fname::AbstractString, D::Dict; indent=0)
+function save_json(fname::AbstractString, D::AbstractDict; indent=0)
     f = open(fname, "w")
     JSON.print(f, D, indent)
     close(f)
@@ -92,7 +92,7 @@ function load_yaml(fname::AbstractString)
    return YAML.load_file(fname)
 end
 
-function save_yaml(fname::AbstractString, D::Dict)
+function save_yaml(fname::AbstractString, D::AbstractDict)
    YAML.write_file(fname, D) 
    return nothing
 end
@@ -109,7 +109,7 @@ function load_dict(fname::AbstractString)
    end
 end
 
-function save_dict(fname::AbstractString, D::Dict; indent=0)
+function save_dict(fname::AbstractString, D::AbstractDict; indent=0)
    if endswith(fname, ".json")
       return save_json(fname, D; indent=indent)
    elseif endswith(fname, ".yaml") || endswith(fname, ".yml")
@@ -122,7 +122,7 @@ function save_dict(fname::AbstractString, D::Dict; indent=0)
 end
 
 
-function zip_dict(fname::AbstractString, D::Dict; indent=0)
+function zip_dict(fname::AbstractString, D::AbstractDict; indent=0)
    ZipWriter(fname) do zipdir
       zip_newfile(zipdir, "dict.json"; compress=true)
       write(zipdir, JSON.json(D, indent))
@@ -145,7 +145,7 @@ end
 
 # Datatype
 write_dict(T::Type) = Dict("__id__" => "Type", "T" => string(T))
-read_dict(::Val{:Type}, D::Dict) = Main.eval(Meta.parse(D["T"]))
+read_dict(::Val{:Type}, D::AbstractDict) = Main.eval(Meta.parse(D["T"]))
 
 # Complex Vector
 
@@ -160,7 +160,7 @@ function write_dict(A::AbstractArray{T}) where {T <: Number}
    return D
 end
 
-function read_dict(::Val{:ACE_ArrayOfNumber}, D::Dict)
+function read_dict(::Val{:ACE_ArrayOfNumber}, D::AbstractDict)
    T = read_dict(D["T"])
    sz = tuple(D["size"]...)
    data = T.(D["real"])
@@ -177,7 +177,7 @@ write_dict(A::AbstractArray{T}) where {T} =
                 "size" => size(A),
                 "vals" => write_dict.(A[:]) )
 
-read_dict(::Val{:ACE_Array}, D::Dict) = 
+read_dict(::Val{:ACE_Array}, D::AbstractDict) = 
          collect(reshape(read_dict.(D["vals"]), tuple(D["size"]...)))
 
 
@@ -192,7 +192,7 @@ write_dict(A::SparseMatrixCSC{TF, TI}) where {TF, TI} =
         "m" => A.m,
         "n" => A.n )
 
-function read_dict(::Val{:SparseMatrixCSC}, D::Dict)
+function read_dict(::Val{:SparseMatrixCSC}, D::AbstractDict)
    TI = read_dict(D["TI"])
    return SparseMatrixCSC(Int(D["m"]), Int(D["n"]),
                            TI.(D["colptr"]), TI.(D["rowval"]), 
@@ -212,7 +212,7 @@ function write_dict(A::StaticArray{S, T, N}) where {S, T <: Real, N}
    return D
 end
 
-function read_dict(::Val{:ACE_StaticArray}, D::Dict)
+function read_dict(::Val{:ACE_StaticArray}, D::AbstractDict)
    T = read_dict(D["T"])
    return T(tuple(D["data"]...))
 end
