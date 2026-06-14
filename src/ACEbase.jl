@@ -24,6 +24,11 @@ function pullback! end
 function pushforward! end 
 function pushforward end 
 
+# shared "spec" accessor: returns a vector of natural descriptions of the
+# basis functions, in the order they are stored in the output of `evaluate`.
+# As with the evaluate interface, the concrete format is not restricted here.
+function natural_indices end
+
 # these could be useful functions to share across ACEsuit packages as well since 
 # there are many different ways how one can allocate and release memory. 
 # For now, we will make them owned by ObjectPools.jl so that that package 
