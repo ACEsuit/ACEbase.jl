@@ -7,4 +7,5 @@ using Test
 
 @testset "ACEbase.jl" begin
     include("test_fio.jl")
+    include("test_categories.jl")
 end

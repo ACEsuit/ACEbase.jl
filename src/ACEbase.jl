@@ -46,6 +46,10 @@ allfieldsequal(x1, x2) =
 
 @deprecate _allfieldsequal(args...) allfieldsequal(args...)
 
+# `Categories` : a shared, sorted, isbits "list of categories" datastructure
+# (the `zlist` / `_i2z` / `_z2i` machinery used across ACEsuit packages).
+include("categories.jl")
+
 # This creates a sub-module FIO
 # FIO via JSON and YAML functionality is collected here. We don't trust 
 # any of the standard packages and write our own manual object <-> JSON
