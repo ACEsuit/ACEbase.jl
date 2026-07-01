@@ -48,8 +48,8 @@ end
    cs = test_roundtrip([:Si, :O, :H, :C]; allow_nonbits = true)
    @test idx2cat(cs, 1) == :C    # sorted alphabetically
 
-   # varargs constructor
-   @test Categories(8, 14, 1) == Categories([1, 8, 14])
+   # construction is from a single iterable (tuple or vector)
+   @test Categories((8, 14, 1)) == Categories([1, 8, 14])
 
    # many species (binary-search path)
    cN = test_roundtrip(collect(reverse(1:100)))
@@ -64,7 +64,6 @@ end
    # non-isbits category types are rejected by default ...
    @test !isbitstype(Symbol)
    @test_throws ErrorException Categories([:Si, :O])
-   @test_throws ErrorException Categories(:Si, :O)             # varargs path too
    @test_throws ErrorException Categories(["a", "b"])         # String also non-bits
    # ... but can be opted into for CPU-only use
    cs = Categories([:Si, :O]; allow_nonbits = true)
@@ -98,12 +97,10 @@ end
    @test (@allocated cat2idx(c, 999)) == 0
 end
 
-@testset "raw-list helpers & pairs" begin
+@testset "pair-index utilities" begin
    c = Categories([1, 8, 14])
-   # generic cat2idx / idx2cat on a raw tuple
-   raw = (1, 8, 14)
-   @test cat2idx(raw, 8) == 2
-   @test idx2cat(raw, 2) == 8
+   # batched lookup via broadcast (Categories is treated as a scalar)
+   @test cat2idx.(c, [14, 1, 8, 99]) == [3, 1, 2, 0]
 
    # catcat2idx against a brute-force reference (row-major linear index)
    n = length(c)

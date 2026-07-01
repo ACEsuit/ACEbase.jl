@@ -33,10 +33,10 @@ position is the index used to address per-category data, so `cat2idx` is a binar
 search (resp. a linear scan for small `N`) over the stored list. For chemical
 species, `T = Int` holds atomic numbers. The struct is `isbits` whenever `T` is.
 
-Construct with any iterable of distinct categories (order is irrelevant; the
+Construct from a single iterable of distinct categories (order is irrelevant; the
 entries are sorted on construction):
 ```julia
-cats = Categories((14, 8))      # or Categories(14, 8), or Categories([8, 14])
+cats = Categories((14, 8))      # or Categories([8, 14])
 @assert idx2cat(cats, 1) == 8   # sorted: O (Z=8) comes before Si (Z=14)
 @assert cat2idx(cats, 14) == 2
 ```
@@ -64,25 +64,19 @@ function Categories(cats; allow_nonbits = false)
    return Categories{N, T}(SVector{N, T}(v))
 end
 
-# varargs convenience: `Categories(8, 14)`, `Categories(:C, :H, :O; allow_nonbits=true)`
-Categories(a, b, cs...; kwargs...) = Categories((a, b, cs...); kwargs...)
 
 # --- forward / inverse maps -----------------------------------------------
 
 """
-`idx2cat(cats, i)` : return the `i`-th category. Also defined for a raw list of
-categories (tuple / vector), where it is just `getindex`.
+`idx2cat(cats, i)` : return the `i`-th category.
 """
 idx2cat(cats::Categories, i::Integer) = cats.list[i]
-idx2cat(cats, i::Integer) = cats[i]
 
 """
 `cat2idx(cats, z) -> Int` : return the 1-based index of category `z`, or `0` if
 `z` is not a category. GPU-safe: no allocation and no error/boxing on the
 not-found path. Uses a linear scan for small `N` and a binary search for large
-`N`. Also defined for a raw list of categories (tuple / vector) via a linear
-search, and for an `AbstractVector` of categories (returns a vector of indices,
-mirroring a batched species-index lookup).
+`N`. To look up a batch of categories, broadcast: `cat2idx.(Ref(cats), zs)`.
 """
 @inline function cat2idx(cats::Categories{N}, z) where {N}
    list = cats.list
@@ -90,24 +84,14 @@ mirroring a batched species-index lookup).
       @inbounds for i = 1:N
          list[i] == z && return i
       end
-      return 0
    else
       k = searchsortedfirst(list, z)
       (k <= N && @inbounds(list[k] == z)) && return k
-      return 0
    end
-end
-
-# batched lookup (e.g. to feed a vector of indices into a kernel)
-cat2idx(cats::Categories, zs::AbstractVector) = [ cat2idx(cats, z) for z in zs ]
-
-# generic linear search over a raw list of categories
-function cat2idx(cats, z)
-   @inbounds for i in eachindex(cats)
-      cats[i] == z && return i
-   end
+   # if the search failed, return 0 (GPU-safe)
    return 0
 end
+
 
 # --- collection interface --------------------------------------------------
 
@@ -118,6 +102,10 @@ Base.iterate(cats::Categories, state=1) =
       state > length(cats) ? nothing : (cats.list[state], state+1)
 Base.in(z, cats::Categories) = (cat2idx(cats, z) != 0)
 Base.:(==)(c1::Categories, c2::Categories) = (c1.list == c2.list)
+
+# treat a `Categories` as a scalar in broadcasting, so batched lookups can be
+# written `cat2idx.(cats, zs)` (rather than `cat2idx.(Ref(cats), zs)`)
+Base.broadcastable(cats::Categories) = Ref(cats)
 
 Base.show(io::IO, cats::Categories) = print(io, "Categories(", Tuple(cats.list), ")")
 
