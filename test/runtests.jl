@@ -8,4 +8,5 @@ using Test
 @testset "ACEbase.jl" begin
     include("test_fio.jl")
     include("test_categories.jl")
+    include("test_chemical_categories.jl")
 end

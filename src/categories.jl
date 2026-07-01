@@ -164,3 +164,29 @@ catcat2idx(cats, a1, a2) = catcat2idx(cats, cats, a1, a2)
 """
 catcat2idx_sym(cats, a1, a2) =
       symidx(cat2idx(cats, a1), cat2idx(cats, a2), length(cats))
+
+
+# --- AtomsBase extension entry points --------------------------------------
+# The methods for these live in `ext/ACEbaseAtomsBaseExt.jl` and are only
+# available once `AtomsBase` is loaded (`using AtomsBase`).
+
+"""
+`chemical_species(x) -> ChemicalSpecies` : convert `x` to an AtomsBase
+`ChemicalSpecies`, where `x` may be an `Integer` (atomic number), a `Symbol`, an
+`AbstractString`, or a `ChemicalSpecies`. Throws for any other type.
+
+Requires `AtomsBase` to be loaded (provided by the `ACEbaseAtomsBaseExt`
+extension).
+"""
+function chemical_species end
+
+"""
+`chemical_categories(list) -> Categories{N, ChemicalSpecies}` : build a
+[`Categories`](@ref) from a list of chemical species. Each entry of `list` is
+passed through [`chemical_species`](@ref), so entries may be atomic numbers,
+symbols, strings, or `ChemicalSpecies` (mixed). Duplicate species are rejected.
+
+Requires `AtomsBase` to be loaded (provided by the `ACEbaseAtomsBaseExt`
+extension).
+"""
+function chemical_categories end
