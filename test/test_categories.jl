@@ -11,12 +11,12 @@ using ACEbase: Categories, idx2cat, cat2idx, make_smatrix,
 _ref_idx(list, z) = findfirst(==(z), list)
 
 # round-trip + sorted invariant for a given (unsorted) input list
-function test_roundtrip(input)
-   cats = Categories(input)
+function test_roundtrip(input; allow_nonbits = false)
+   cats = Categories(input; allow_nonbits)
    @test issorted(cats.list)
    @test length(cats) == length(input)
    # construction is order-independent
-   @test cats == Categories(reverse(collect(input)))
+   @test cats == Categories(reverse(collect(input)); allow_nonbits)
    sorted = sort(collect(input))
    for i = 1:length(cats)
       @test idx2cat(cats, i) == sorted[i]
@@ -39,8 +39,13 @@ end
    @test idx2cat(c3, 1) == 1 && idx2cat(c3, 3) == 14   # sorted order
    @test cat2idx(c3, 8) == 2
 
-   # non-integer categories (Symbols)
-   cs = test_roundtrip([:Si, :O, :H, :C])
+   # non-integer but isbits categories (Char) work without the opt-out
+   cc = test_roundtrip(['c', 'a', 'b'])
+   @test idx2cat(cc, 1) == 'a'
+   @test isbits(cc)
+
+   # non-integer, non-isbits categories (Symbols) need `allow_nonbits`
+   cs = test_roundtrip([:Si, :O, :H, :C]; allow_nonbits = true)
    @test idx2cat(cs, 1) == :C    # sorted alphabetically
 
    # varargs constructor
@@ -53,6 +58,23 @@ end
 
    # duplicates rejected
    @test_throws ErrorException Categories([1, 2, 2, 3])
+end
+
+@testset "isbits requirement" begin
+   # non-isbits category types are rejected by default ...
+   @test !isbitstype(Symbol)
+   @test_throws ErrorException Categories([:Si, :O])
+   @test_throws ErrorException Categories(:Si, :O)             # varargs path too
+   @test_throws ErrorException Categories(["a", "b"])         # String also non-bits
+   # ... but can be opted into for CPU-only use
+   cs = Categories([:Si, :O]; allow_nonbits = true)
+   @test cs isa Categories{2, Symbol}
+   @test !isbits(cs)
+   @test cat2idx(cs, :Si) == 2
+   # isbits category types are accepted (and produce an isbits Categories)
+   @test isbits(Categories([14, 8]))            # Int
+   @test isbits(Categories(['a', 'c', 'b']))    # Char
+   @test isbits(Categories([(1,2), (0,9)]))     # Tuple{Int,Int}
 end
 
 @testset "absent categories" begin

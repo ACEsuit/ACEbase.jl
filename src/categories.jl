@@ -47,20 +47,25 @@ end
 
 # --- constructors ---------------------------------------------------------
 
-function Categories(cats)
+function Categories(cats; allow_nonbits = false)
    v = collect(cats)
+   T = eltype(v)
+   (allow_nonbits || isbitstype(T)) ||
+      error("Categories: the category type `$T` is not an `isbits` type, so the \
+             resulting `Categories` could not be moved to a GPU or passed into a \
+             kernel. Convert the categories to an `isbits` code first (e.g. integer \
+             atomic numbers), or pass `allow_nonbits = true` to override.")
    sort!(v)
    for i = 2:length(v)
       v[i-1] == v[i] && error("Categories: categories must be distinct, got a \
                                repeated entry $(v[i])")
    end
    N = length(v)
-   T = eltype(v)
    return Categories{N, T}(SVector{N, T}(v))
 end
 
-# varargs convenience: `Categories(8, 14)`, `Categories(:C, :H, :O)`
-Categories(a, b, cs...) = Categories((a, b, cs...))
+# varargs convenience: `Categories(8, 14)`, `Categories(:C, :H, :O; allow_nonbits=true)`
+Categories(a, b, cs...; kwargs...) = Categories((a, b, cs...); kwargs...)
 
 # --- forward / inverse maps -----------------------------------------------
 
