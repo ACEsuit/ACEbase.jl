@@ -40,8 +40,8 @@ end
 end
 
 @testset "many species (binary-search path)" begin
-   # Z = 1:30 exercises the binary-search branch of cat2idx, which needs the
-   # (temporary) `isless` ordering of ChemicalSpecies
+   # Z = 1:30 exercises the binary-search branch of cat2idx, which relies on
+   # the `isless` ordering of ChemicalSpecies provided by AtomsBase
    c = chemical_categories(collect(1:30))
    @test c isa Categories{30, ChemicalSpecies}
    @test issorted(atomic_number.(c.list))

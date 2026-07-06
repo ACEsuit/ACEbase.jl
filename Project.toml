@@ -21,7 +21,7 @@ AtomsBase = "a963bdd2-2df7-4f54-a1ee-49d51e6be12a"
 ACEbaseAtomsBaseExt = "AtomsBase"
 
 [compat]
-AtomsBase = "0.5"
+AtomsBase = "0.5.3"
 JSON = "0.21, 1"
 Reexport = "1"
 StaticArrays = "1"
